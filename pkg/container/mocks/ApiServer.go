@@ -3,17 +3,19 @@ package mocks
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/onsi/ginkgo"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/onsi/ginkgo"
+
 	t "github.com/containrrr/watchtower/pkg/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	O "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 )
@@ -259,15 +261,15 @@ func RemoveImageHandler(imagesWithParents map[string][]string) http.HandlerFunc 
 		ghttp.VerifyRequest("DELETE", O.MatchRegexp("/images/.*")),
 		func(w http.ResponseWriter, r *http.Request) {
 			parts := strings.Split(r.URL.Path, `/`)
-			image := parts[len(parts)-1]
+			img := parts[len(parts)-1]
 
-			if parents, found := imagesWithParents[image]; found {
-				items := []types.ImageDeleteResponseItem{
-					{Untagged: image},
-					{Deleted: image},
+			if parents, found := imagesWithParents[img]; found {
+				items := []image.DeleteResponse{
+					{Untagged: img},
+					{Deleted: img},
 				}
 				for _, parent := range parents {
-					items = append(items, types.ImageDeleteResponseItem{Deleted: parent})
+					items = append(items, image.DeleteResponse{Deleted: parent})
 				}
 				ghttp.RespondWithJSONEncoded(http.StatusOK, items)(w, r)
 			} else {
